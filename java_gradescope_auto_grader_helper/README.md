@@ -3,7 +3,8 @@
 1. Write documentation
 2. Create startup example
 3. Send to the prof the new starting code for students
-4. 
+4. Change this to use UV
+5. Fix other projects to work with this
 
 ## Setup
 

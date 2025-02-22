@@ -17,13 +17,30 @@ from .test_runner import run_tests
 
 
 def write_results(results: dict) -> None:
+    """
+    Write results to a JSON file.
+    """
+
     results_dir = Path(ABSOLUTE_RESULTS_DIR)
     results_dir.mkdir(parents=True, exist_ok=True)
     with open(results_dir / "results.json", "w") as results_file:
         json.dump(results, results_file)
 
 
-def validate_tests_module(tests_module):
+def validate_tests_module(
+    tests_module: object,
+) -> list[
+    tuple[str, callable[float, str], dict[str, str | int]]
+    | tuple[str, dict[str, str | int]]
+]:
+    """
+    Validates the tests module by ensuring that it contains a properly configured TESTS variable.
+
+    Raises:
+        ConfigurationError: If TESTS is not found in tests_module, is not a list, or any test configuration
+                            does not conform to the expected structure.
+    """
+
     if not hasattr(tests_module, "TESTS"):
         raise ConfigurationError(
             "TESTS variable not found in the tests module"
@@ -59,7 +76,15 @@ def validate_tests_module(tests_module):
     return tests
 
 
-def validate_entry_point(tests_module):
+def validate_entry_point(tests_module) -> str:
+    """
+    Validates the 'ENTRY_POINT' variable in the provided tests module.
+
+    Raises:
+        ConfigurationError: If the 'ENTRY_POINT' variable is missing, is not a string,
+                            or if it contains a path separator (i.e., is not merely a file name).
+    """
+
     if not hasattr(tests_module, "ENTRY_POINT"):
         raise ConfigurationError(
             "ENTRY_POINT variable not found in the tests module"
@@ -78,6 +103,12 @@ def validate_entry_point(tests_module):
 
 
 def check_style(tests_module):
+    """
+    Checks the Java source files for style violations using CheckStyle.
+
+    If style checking is not enabled (i.e., CHECK_STYLE is False), the function returns None.
+    """
+
     check_style = getattr(tests_module, "CHECK_STYLE", False)
     if not check_style:
         return
@@ -125,6 +156,7 @@ def main():
     args = parser.parse_args()
 
     try:
+        # Loading tests module
         path = find_absolute_path(args.path, cwd=ABSOLUTE_SOURCE_DIR)
         tests_module = load_module(path)
 
@@ -161,6 +193,7 @@ def main():
         )
 
         # Check style
+        # Documentation: https://checkstyle.sourceforge.io/cmdline.html
         style_results = check_style(tests_module)
         if style_results:
             final_json["tests"].append(style_results)
