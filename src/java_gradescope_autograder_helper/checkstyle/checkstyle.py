@@ -20,11 +20,11 @@ def run_checkstyle(java_file: str, config_path: str | None) -> str:
     # Get the absolute paths to the checkstyle jar and config in the package.
     with (
         importlib.resources.path(
-            "java_gradescope_auto_grader_helper.checkstyle",
+            "java_gradescope_autograder_helper.checkstyle",
             "checkstyle-10.21.2-all.jar",
         ) as jar_path,
         importlib.resources.path(
-            "java_gradescope_auto_grader_helper.checkstyle",
+            "java_gradescope_autograder_helper.checkstyle",
             "bowdoin_checks.xml",
         ) as default_config_path,
     ):
@@ -39,18 +39,16 @@ def run_checkstyle(java_file: str, config_path: str | None) -> str:
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
 
-        if result.stderr != "":
-            raise ConfigurationError(
-                f"Checkstyle failed ({result.returncode}):\n{' '.join(cmd)}\n\n{result.stderr}"
-            )
-
         match = re.fullmatch(
             r"Checkstyle ends with (\d+) errors\.", result.stdout
         )
 
-        if "Audit done." not in result.stdout:
+        if (
+            "Audit done." not in result.stdout
+            and "Audit done." not in result.stderr
+        ):
             raise ConfigurationError(
-                f"Checkstyle failed ({result.returncode}):\n{' '.join(cmd)}\n\n{result.stdout}"
+                f"Checkstyle failed ({result.returncode}):\n{' '.join(cmd)}\n\nOutput:\n\n{result.stdout}\n\nError:\n\n{result.stderr}"
             )
 
         return int(match.group(1)) if match else 0

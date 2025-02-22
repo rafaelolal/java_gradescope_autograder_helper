@@ -6,6 +6,20 @@
 4. Change this to use UV
 5. Fix other projects to work with this
 
+## Testing
+
+Developer
+1. Go to root directory
+2. `source .venv/bin/activate`
+3. Build with `uv build`
+4. Publish with `uv publish` then type `__token__` for the username and the token as the password
+
+Tester
+1. Go to /autograder
+2. `source .venv/bin/activate`
+3. Install with `uv add .. --active --dev`
+4. Test with `./run_autograder`
+
 ## Setup
 
 **setup.sh**: a setup (Bash) script that installs all your dependencies. By default, we're running on Ubuntu images, so you can use apt, or any other available means of setting up packages.

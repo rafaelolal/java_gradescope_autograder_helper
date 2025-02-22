@@ -1,12 +1,12 @@
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from .helpers import ConfigurationError
 
 
 def validate_custom_diff_func_output(
-    func: callable[float, str], output: str
+    func: Callable[[str, str], tuple[float, str]], output: str
 ) -> tuple[float, str]:
     """
     Validate the output of a custom diff function.
@@ -100,7 +100,14 @@ def compile_test_results(
 
 
 def run_tests(
-    tests: list[tuple[str, callable[float, str], dict] | tuple[str, dict]],
+    tests: list[
+        tuple[
+            str,
+            Callable[[str, str], tuple[float, str]],
+            dict[str, str | int],
+        ]
+        | tuple[str, dict[str, str | int]],
+    ],
     reference_file_path: str,
     submission_file_path: str,
 ) -> tuple[int, list[dict[str, Any]]]:

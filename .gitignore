@@ -1,9 +1,10 @@
 *.egg-info
 dist
-env
+.venv
 build
 gradescope_ssh
 gradescope_ssh.pub
 __pycache__
 .history
 .DS_Store
+autograder

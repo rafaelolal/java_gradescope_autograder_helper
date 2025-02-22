@@ -2,6 +2,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Callable
 
 from .checkstyle.checkstyle import get_files_to_check, run_checkstyle
 from .compiler import compile_java
@@ -30,8 +31,14 @@ def write_results(results: dict) -> None:
 def validate_tests_module(
     tests_module: object,
 ) -> list[
-    tuple[str, callable[float, str], dict[str, str | int]]
-    | tuple[str, dict[str, str | int]]
+    list[
+        tuple[
+            str,
+            Callable[[str, str], tuple[float, str]],
+            dict[str, str | int],
+        ]
+        | tuple[str, dict[str, str | int]],
+    ]
 ]:
     """
     Validates the tests module by ensuring that it contains a properly configured TESTS variable.
