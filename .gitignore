@@ -1,0 +1,9 @@
+*.egg-info
+dist
+env
+build
+gradescope_ssh
+gradescope_ssh.pub
+__pycache__
+.history
+.DS_Store

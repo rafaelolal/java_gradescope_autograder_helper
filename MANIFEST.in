@@ -1,0 +1,2 @@
+include my_package/checkstyle/*.jar
+include my_package/checkstyle/*.xml
