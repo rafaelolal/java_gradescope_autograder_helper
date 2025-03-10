@@ -1,13 +1,17 @@
 import subprocess
 from pathlib import Path
 
+from .helpers import ConfigurationError
+
 
 def compile_java(entry_point_path: str, classpath: str | None) -> None:
     """
-    Compiles all Java source files found recursively from the directory of the given entry point.
+    Compiles all Java source files found recursively from the directory of
+    the given entry point.
 
     Raises:
-        Exception: If the compilation process fails, an Exception is raised with the corresponding error message from stderr.
+        Exception: If the compilation process fails, an Exception is raised
+            with the corresponding error message from stderr.
     """
 
     cmd = ["javac"]
@@ -24,4 +28,4 @@ def compile_java(entry_point_path: str, classpath: str | None) -> None:
     )
 
     if result.returncode != 0:
-        raise Exception(f"Compilation failed:\n{result.stderr}")
+        raise ConfigurationError(f"Compilation failed:\n{result.stderr}")

@@ -16,7 +16,7 @@ def get_files_to_check(dir: str, regex: str) -> list[str]:
     return files
 
 
-def run_checkstyle(java_file: str, config_path: str | None) -> str:
+def run_checkstyle(java_file: str, config_path: str | None) -> tuple[str, str]:
     # Get the absolute paths to the checkstyle jar and config in the package.
     with (
         importlib.resources.path(
@@ -39,9 +39,8 @@ def run_checkstyle(java_file: str, config_path: str | None) -> str:
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
 
-        match = re.fullmatch(
-            r"Checkstyle ends with (\d+) errors\.", result.stdout
-        )
+        print("my checkstyle stdout", result.stdout)
+        print("my checkstyle stderr", result.stderr)
 
         if (
             "Audit done." not in result.stdout
@@ -51,4 +50,17 @@ def run_checkstyle(java_file: str, config_path: str | None) -> str:
                 f"Checkstyle failed ({result.returncode}):\n{' '.join(cmd)}\n\nOutput:\n\n{result.stdout}\n\nError:\n\n{result.stderr}"
             )
 
-        return int(match.group(1)) if match else 0
+        return result.stdout, result.stderr
+
+
+def get_total_errors(out: str) -> int:
+    match = re.fullmatch(r"Checkstyle ends with (\d+) errors\.", out)
+    return int(match.group(1)) if match else 0
+
+
+def default_evaluation(
+    out: str, err: str, total_errors: int
+) -> tuple[float, str]:
+    score_percentage = 1 - (total_errors * 0.1)
+    score_percentage = 0 if score_percentage < 0 else score_percentage
+    return score_percentage, f"Style violations found: {total_errors}."
