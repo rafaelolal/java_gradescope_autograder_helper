@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Learn more here: https://gradescope-autograders.readthedocs.io/en/latest/specs/#autograder-specifications
+
+# Gradescope automatically copies this script to /autograder/run_autograder,
+# then, it is executed by Gradescope in that location.
+# The file path of `tests.py` does not have to be complete because the package
+# will search for it in the `/autograder/source` directory.
+
+gradescope-run tests.py

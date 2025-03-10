@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Learn more here: https://gradescope-autograders.readthedocs.io/en/latest/specs/#autograder-specifications
+
+# This copy of `run_autograder` is here because Gradescope automatically
+# copies the `/source/run_autograder` to this location.
+# For testing purposes only, if your `run_autograder` is different, copy it to
+# this location.
+# To simulate the Gradescope environment, ensure you are at `/autograder` and
+# run this script with `./run_autograder`. Note you may have to give yourself
+# execution permissions. Then, check `autograder/results/results.json`
+
+autograder run tests.py

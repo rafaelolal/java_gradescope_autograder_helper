@@ -1,0 +1,37 @@
+{
+    "execution_time": 0,
+    "tests": [
+        {
+            "score": 7.0,
+            "max_score": 10,
+            "status": "passed",
+            "name": "Check Secret",
+            "output": "\n\nOutput:\n\nUsage: java Main greet <name> OR java Main add <number> <number>\n\n\nDid you include the secret phrase in your output?",
+            "visibility": "visible"
+        },
+        {
+            "score": 10,
+            "max_score": 10,
+            "status": "passed",
+            "name": "Evaluate 1+2",
+            "output": "\n\nOutput:\n\nUsage: java Main greet <name> OR java Main add <number> <number>\n",
+            "visibility": "visible"
+        },
+        {
+            "score": 10,
+            "max_score": 10,
+            "status": "passed",
+            "name": "Evaluate 3+4",
+            "output": "\n\nOutput:\n\nUsage: java Main greet <name> OR java Main add <number> <number>\n",
+            "visibility": "visible"
+        },
+        {
+            "score": 10,
+            "max_score": 10,
+            "status": "passed",
+            "name": "Evaluate 5+6",
+            "output": "\n\nOutput:\n\nUsage: java Main greet <name> OR java Main add <number> <number>\n",
+            "visibility": "visible"
+        }
+    ]
+}
