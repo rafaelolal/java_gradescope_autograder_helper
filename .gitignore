@@ -7,4 +7,4 @@ gradescope_ssh.pub
 __pycache__
 .history
 .DS_Store
-autograder
+*.class

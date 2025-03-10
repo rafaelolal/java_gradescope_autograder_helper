@@ -1,10 +1,21 @@
 # Java Gradescope Auto Grader Helper
 
-1. Write documentation
-2. Create startup example
-3. Send to the prof the new starting code for students
-4. Change this to use UV
+**Bold**: complete
+
+1. *Write documentation*
+  1. Missing checkstyle eval function example
 5. Fix other projects to work with this
+5. **Create a test command that creates the docker environment locally**
+6. Review how the ckecky style works
+8. test everything, test incorrect student output, incorrect teacher program, check if losing points, check the diff function stuff, fix the bug with the results
+9. Add time out to subprocesses
+
+#### Refactoring
+
+* Single responsibility
+* Small, 30 lines
+* Individually testable
+* 
 
 ## Testing
 
@@ -19,6 +30,9 @@ Tester
 2. `source .venv/bin/activate`
 3. Install with `uv add .. --active --dev`
 4. Test with `./run_autograder`
+
+Checkstyle
+1. `java -jar checkstyle-10.21.2-all.jar -c my_checks.xml YourFile.java`
 
 ## Setup
 
