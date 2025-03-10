@@ -1,3 +1,4 @@
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any, Callable
@@ -49,7 +50,7 @@ def run_java_code(path: str, command_line_args: str) -> tuple[str, str]:
     file_path = Path(path)
     cwd = file_path.parent
     file_name = file_path.stem
-    cmd = ["java", file_name] + command_line_args.strip().split()
+    cmd = ["java", file_name] + shlex.split(command_line_args.strip())
 
     result = subprocess.run(cmd, capture_output=True, cwd=cwd)
     # Decode outputs to get string results.
