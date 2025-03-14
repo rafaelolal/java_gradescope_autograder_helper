@@ -1,6 +1,6 @@
 [project]
 name = "java-gradescope-autograder-helper"
-version = "1.1.0"
+version = "1.1.1"
 description = "A helper package for setting up Gradescope autograder tests for Java projects"
 readme = "README.md"
 url="https://github.com/rafaelolal/java_gradescope_autograder_helper"
