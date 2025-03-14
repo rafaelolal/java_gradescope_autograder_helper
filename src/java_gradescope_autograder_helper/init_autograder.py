@@ -32,4 +32,4 @@ def init_autograder(base_dest_path: str) -> None:
             f"Could not find the destination directory {dest_dir} when initializing the autograder."
         )
 
-    shutil.copytree(source_dir, dest_dir)
+    shutil.copytree(source_dir, dest_dir, dirs_exist_ok=True)
