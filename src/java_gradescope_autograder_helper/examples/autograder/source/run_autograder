@@ -7,4 +7,4 @@
 # The file path of `tests.py` does not have to be complete because the package
 # will search for it in the `/autograder/source` directory.
 
-gradescope-run tests.py
+autograder run tests.py

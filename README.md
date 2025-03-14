@@ -18,7 +18,7 @@ PyPi: https://pypi.org/manage/project/java-gradescope-autograder-helper/releases
 6. Check results in `autograder/results/results.json`
 7. Zip the contents inside `autograder/source/` and upload to Gradescope.
 
-Notes: you may need to give yourself execution permission on `run_autograder`
+Note: you may need to give yourself execution permission on `run_autograder`
 * **Mac**: `chmod +x run_autograder`
 
 ## Features
