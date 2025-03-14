@@ -2,12 +2,7 @@ import json
 from pathlib import Path
 from typing import Callable
 
-from .checkstyle.checkstyle import (
-    default_evaluation,
-    get_files_to_check,
-    get_total_errors,
-    run_checkstyle,
-)
+from .checkstyle.checkstyle import check_style
 from .compiler import compile_java
 from .helpers import (
     ABSOLUTE_RESULTS_DIR,
@@ -20,18 +15,55 @@ from .loader import load_module
 from .test_runner import run_tests
 
 
-def write_results(results: dict) -> None:
-    """
-    Write results to the results JSON file.
-    """
+def run_autograder(autograder_path: str) -> None:
+    global ABSOLUTE_SOURCE_DIR
+    global ABSOLUTE_SUBMISSION_DIR
 
-    global ABSOLUTE_RESULTS_DIR
+    ABSOLUTE_SOURCE_DIR = find_absolute_path(ABSOLUTE_SOURCE_DIR)
+    ABSOLUTE_SUBMISSION_DIR = find_absolute_path(ABSOLUTE_SUBMISSION_DIR)
+    # Loading tests module
+    path = find_absolute_path(autograder_path, cwd=ABSOLUTE_SOURCE_DIR)
+    tests_module = load_module(path)
 
-    ABSOLUTE_RESULTS_DIR = find_absolute_path(ABSOLUTE_RESULTS_DIR)
-    results_dir = Path(ABSOLUTE_RESULTS_DIR)
-    results_dir.mkdir(parents=True, exist_ok=True)
-    with open(results_dir / "results.json", "w") as results_file:
-        json.dump(results, results_file)
+    tests = validate_tests_module(tests_module)
+    reference_file_name = validate_entry_point(tests_module)
+
+    # Compiling
+    reference_file_path = find_absolute_path(
+        reference_file_name,
+        ABSOLUTE_SOURCE_DIR,
+    )
+    submission_file_path = find_absolute_path(
+        reference_file_name,
+        ABSOLUTE_SUBMISSION_DIR,
+    )
+
+    # Run tests
+    # Specification: https://gradescope-autograders.readthedocs.io/en/latest/specs/
+    final_json = {
+        "execution_time": None,
+        "tests": [],
+    }
+
+    # Check style
+    # Documentation: https://checkstyle.sourceforge.io/cmdline.html
+    style_results = check_style(tests_module)
+    if style_results:
+        final_json["tests"].append(style_results)
+
+    # Compile Java
+    classpath = getattr(tests_module, "CLASSPATH", None)
+    if classpath is not None:
+        classpath = find_absolute_path(classpath)
+
+    compile_java(reference_file_path, classpath)
+    compile_java(submission_file_path, classpath)
+
+    final_json["execution_time"], final_json["tests"] = run_tests(
+        tests, reference_file_path, submission_file_path
+    )
+
+    write_results(final_json)
 
 
 def validate_tests_module(
@@ -118,130 +150,15 @@ def validate_entry_point(tests_module) -> str:
     return reference_file_name
 
 
-def validate_checkstyle_config(tests_module) -> dict[str, str | int] | None:
-    # CHECK_STYLE = {
-    #     "config_file": None,
-    #     "file_regex": r"(BoggleBoard|Recursion)\.java",
-    #     "max_score": 0,
-    #     "eval_function": None,
-    # }
-
-    check_style = getattr(tests_module, "CHECK_STYLE", None)
-    if check_style is None:
-        return None
-
-    if not isinstance(check_style, dict):
-        raise ConfigurationError('"CHECK_STYLE" must be a dictionary')
-
-    config_file = check_style.get("config_file", None)
-    if config_file is not None and not isinstance(config_file, str):
-        raise ConfigurationError('"CHECK_STYLE.config_file" must be a string')
-
-    file_regex = check_style.get("file_regex", None)
-    if file_regex is not None and not isinstance(file_regex, str):
-        raise ConfigurationError('"CHECK_STYLE.file_regex" must be a string')
-
-    max_score = check_style.get("max_score", None)
-    if max_score is not None and not isinstance(max_score, int):
-        raise ConfigurationError('"CHECK_STYLE.max_score" must be an integer')
-
-    eval_function = check_style.get("eval_function", None)
-    if eval_function is not None and not callable(eval_function):
-        raise ConfigurationError(
-            '"CHECK_STYLE.eval_function" must be a callable function'
-        )
-
-    return check_style
-
-
-def check_style(tests_module) -> dict[str, str | int] | None:
+def write_results(results: dict) -> None:
     """
-    Checks the Java source files for style violations using CheckStyle.
+    Write results to the results JSON file.
     """
 
-    check_style = validate_checkstyle_config(tests_module)
-    if check_style is None:
-        return None
+    global ABSOLUTE_RESULTS_DIR
 
-    check_style_configuration = check_style.get("config_file", None)
-    if check_style_configuration is not None:
-        check_style_configuration = find_absolute_path(
-            check_style_configuration
-        )
-
-    check_style_regex = check_style.get("file_regex", r".*\.java")
-    files_to_check = get_files_to_check(
-        ABSOLUTE_SUBMISSION_DIR, check_style_regex
-    )
-
-    violations = 0
-    for file in files_to_check:
-        stdout, stderr = run_checkstyle(
-            find_absolute_path(file, cwd=ABSOLUTE_SUBMISSION_DIR),
-            check_style_configuration,
-        )
-        total_errors = get_total_errors(stdout)
-        violations += total_errors
-
-    score_percentage, feedback = default_evaluation("", "", violations)
-    max_score = check_style.get("max_score", 0)
-
-    return {
-        "name": "Style",
-        "score": max_score * score_percentage,
-        "max_score": max_score,
-        "output": feedback,
-        "visibility": "visible",
-        "status": "passed" if violations == 0 else "failed",
-    }
-
-
-def run_autograder(autograder_path: str) -> None:
-    global ABSOLUTE_SOURCE_DIR
-    global ABSOLUTE_SUBMISSION_DIR
-
-    ABSOLUTE_SOURCE_DIR = find_absolute_path(ABSOLUTE_SOURCE_DIR)
-    ABSOLUTE_SUBMISSION_DIR = find_absolute_path(ABSOLUTE_SUBMISSION_DIR)
-    # Loading tests module
-    path = find_absolute_path(autograder_path, cwd=ABSOLUTE_SOURCE_DIR)
-    tests_module = load_module(path)
-
-    tests = validate_tests_module(tests_module)
-    reference_file_name = validate_entry_point(tests_module)
-
-    # Compiling
-    reference_file_path = find_absolute_path(
-        reference_file_name,
-        ABSOLUTE_SOURCE_DIR,
-    )
-    submission_file_path = find_absolute_path(
-        reference_file_name,
-        ABSOLUTE_SUBMISSION_DIR,
-    )
-
-    # Run tests
-    # Specification: https://gradescope-autograders.readthedocs.io/en/latest/specs/
-    final_json = {
-        "execution_time": None,
-        "tests": [],
-    }
-
-    # Check style
-    # Documentation: https://checkstyle.sourceforge.io/cmdline.html
-    style_results = check_style(tests_module)
-    if style_results:
-        final_json["tests"].append(style_results)
-
-    # Compile Java
-    classpath = getattr(tests_module, "CLASSPATH", None)
-    if classpath is not None:
-        classpath = find_absolute_path(classpath)
-
-    compile_java(reference_file_path, classpath)
-    compile_java(submission_file_path, classpath)
-
-    final_json["execution_time"], final_json["tests"] = run_tests(
-        tests, reference_file_path, submission_file_path
-    )
-
-    write_results(final_json)
+    ABSOLUTE_RESULTS_DIR = find_absolute_path(ABSOLUTE_RESULTS_DIR)
+    results_dir = Path(ABSOLUTE_RESULTS_DIR)
+    results_dir.mkdir(parents=True, exist_ok=True)
+    with open(results_dir / "results.json", "w") as results_file:
+        json.dump(results, results_file)

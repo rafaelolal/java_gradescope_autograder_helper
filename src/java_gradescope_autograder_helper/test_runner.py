@@ -6,100 +6,6 @@ from typing import Any, Callable
 from .helpers import ConfigurationError
 
 
-def validate_custom_diff_func_output(
-    func: Callable[[str, str], tuple[float, str]], output: str
-) -> tuple[float, str]:
-    """
-    Validate the output of a custom diff function.
-
-    Raises:
-        ConfigurationError: If output is not a sequence of exactly two elements,
-                            if the score is not between 0 and 1 inclusive,
-                            or if the feedback is not a string.
-    """
-
-    if not isinstance(output, (list, tuple)):
-        raise ConfigurationError(
-            f"The diff function {func} must return a tuple or list."
-        )
-
-    if len(output) != 2:
-        raise ConfigurationError(
-            f"The diff function {func} must return exactly 2 elements."
-        )
-
-    score, feedback = output
-    if not (0 <= score <= 1):
-        raise ConfigurationError(
-            f"The diff function {func} must return a score between 0 and 1 inclusive."
-        )
-
-    if not isinstance(feedback, str):
-        raise ConfigurationError(
-            f"The diff function {func} must return feedback as a string."
-        )
-
-    return score, feedback
-
-
-def run_java_code(path: str, command_line_args: str) -> tuple[str, str]:
-    """
-    Run a Java program given a compiled class file path and a command line arguments string.
-    """
-
-    file_path = Path(path)
-    cwd = file_path.parent
-    file_name = file_path.stem
-    cmd = ["java", file_name] + shlex.split(command_line_args.strip())
-
-    result = subprocess.run(cmd, capture_output=True, cwd=cwd)
-    # Decode outputs to get string results.
-    stdout = result.stdout.decode("utf-8")
-    stderr = result.stderr.decode("utf-8")
-    return stdout, stderr
-
-
-def compile_test_results(
-    reference_output: str,
-    student_output: str,
-    student_error: str,
-    diff_func: tuple[float, str] | None,
-    kwargs: dict[str, str | int],
-) -> dict[str, str | int | None]:
-    """
-    Compile test results for Gradescope autograders.
-    """
-
-    max_score = kwargs.get("score", 1)
-    test_result = {
-        "score": None,
-        "max_score": max_score,
-        "status": None,
-        "name": kwargs.get("name"),
-        "output": kwargs.get("output", ""),
-        "visibility": kwargs.get("visibility", "visible"),
-    }
-
-    if student_output:
-        test_result["output"] += f"\n\nOutput:\n\n{student_output}"
-    if student_error:
-        test_result["output"] += f"\n\nError:\n\n{student_error}"
-
-    if diff_func is None:
-        passed = reference_output == student_output
-        test_result["status"] = "passed" if passed else "fail"
-        test_result["score"] = max_score if passed else 0
-    else:
-        score, feedback = validate_custom_diff_func_output(
-            diff_func, diff_func(reference_output, student_output)
-        )
-        test_result["status"] = "passed"
-        test_result["score"] = score * max_score
-        test_result["output"] += f"\n\n{feedback}"
-
-    return test_result
-
-
 def run_tests(
     tests: list[
         tuple[
@@ -149,3 +55,97 @@ def run_tests(
         results.append(result)
 
     return total_run_time, results
+
+
+def compile_test_results(
+    reference_output: str,
+    student_output: str,
+    student_error: str,
+    diff_func: tuple[float, str] | None,
+    kwargs: dict[str, str | int],
+) -> dict[str, str | int | None]:
+    """
+    Compile test results for Gradescope autograders.
+    """
+
+    max_score = kwargs.get("score", 1)
+    test_result = {
+        "score": None,
+        "max_score": max_score,
+        "status": None,
+        "name": kwargs.get("name"),
+        "output": kwargs.get("output", ""),
+        "visibility": kwargs.get("visibility", "visible"),
+    }
+
+    if student_output:
+        test_result["output"] += f"\n\nOutput:\n\n{student_output}"
+    if student_error:
+        test_result["output"] += f"\n\nError:\n\n{student_error}"
+
+    if diff_func is None:
+        passed = reference_output == student_output
+        test_result["status"] = "passed" if passed else "fail"
+        test_result["score"] = max_score if passed else 0
+    else:
+        score, feedback = validate_custom_diff_func_output(
+            diff_func, diff_func(reference_output, student_output)
+        )
+        test_result["status"] = "passed"
+        test_result["score"] = score * max_score
+        test_result["output"] += f"\n\n{feedback}"
+
+    return test_result
+
+
+def run_java_code(path: str, command_line_args: str) -> tuple[str, str]:
+    """
+    Run a Java program given a compiled class file path and a command line arguments string.
+    """
+
+    file_path = Path(path)
+    cwd = file_path.parent
+    file_name = file_path.stem
+    cmd = ["java", file_name] + shlex.split(command_line_args.strip())
+
+    result = subprocess.run(cmd, capture_output=True, cwd=cwd)
+    # Decode outputs to get string results.
+    stdout = result.stdout.decode("utf-8")
+    stderr = result.stderr.decode("utf-8")
+    return stdout, stderr
+
+
+def validate_custom_diff_func_output(
+    func: Callable[[str, str], tuple[float, str]], output: str
+) -> tuple[float, str]:
+    """
+    Validate the output of a custom diff function.
+
+    Raises:
+        ConfigurationError: If output is not a sequence of exactly two elements,
+                            if the score is not between 0 and 1 inclusive,
+                            or if the feedback is not a string.
+    """
+
+    if not isinstance(output, (list, tuple)):
+        raise ConfigurationError(
+            f"The diff function {func} must return a tuple or list."
+        )
+
+    if len(output) != 2:
+        raise ConfigurationError(
+            f"The diff function {func} must return exactly 2 elements."
+        )
+
+    score, feedback = output
+    if not (0 <= score <= 1):
+        raise ConfigurationError(
+            f"The diff function {func} must return a score between 0 and 1 inclusive."
+        )
+
+    if not isinstance(feedback, str):
+        raise ConfigurationError(
+            f"The diff function {func} must return feedback as a string."
+        )
+
+    return score, feedback

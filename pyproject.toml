@@ -1,15 +1,14 @@
 [project]
 name = "java-gradescope-autograder-helper"
-version = "1.0.0"
+version = "1.1.0"
 description = "A helper package for setting up Gradescope autograder tests for Java projects"
 readme = "README.md"
 url="https://github.com/rafaelolal/java_gradescope_autograder_helper"
 requires-python = ">=3.10.6"
 
 authors = [
-    { name = "Rafael Almeida", email = "contact@ralmeida.dev" }
+    { name = "Rafael Almeida", email = "github@ralmeida.dev" }
 ]
-license = { text = "Apache 2.0" }
 
 dependencies = []
 
