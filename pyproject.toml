@@ -1,6 +1,6 @@
 [project]
 name = "java-gradescope-autograder-helper"
-version = "1.2.3"
+version = "1.2.4"
 description = "A helper package for setting up Gradescope autograder tests for Java projects"
 readme = "README.md"
 license = { file = "LICENSE" }
