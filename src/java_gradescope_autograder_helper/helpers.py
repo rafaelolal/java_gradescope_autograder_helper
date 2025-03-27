@@ -44,7 +44,7 @@ def find_absolute_path(search, cwd=None):
     )
 
 
-# Gradescope autograder specifications: https://gradescope-autograders.readthedocs.io/en/latest/specs/#file-hierarchy
+# Gradescope autograder file structure: https://gradescope-autograders.readthedocs.io/en/latest/specs/#file-hierarchy
 ABSOLUTE_SOURCE_DIR = "/autograder/source"
 ABSOLUTE_SUBMISSION_DIR = "/autograder/submission"
 ABSOLUTE_RESULTS_DIR = "/autograder/results"

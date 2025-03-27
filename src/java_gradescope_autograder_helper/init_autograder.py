@@ -4,7 +4,7 @@ from pathlib import Path
 from .helpers import ConfigurationError
 
 
-def init_autograder(base_dest_path: str) -> None:
+def init_autograder() -> None:
     """
     Initialize the autograder by copying the example autograder files from the
     source directory to the destination.
@@ -19,7 +19,7 @@ def init_autograder(base_dest_path: str) -> None:
 
     """
     source_dir = Path(__file__).parent / "examples" / "autograder"
-    dest_dir = Path(base_dest_path) / "autograder"
+    dest_dir = Path.cwd() / "autograder"
     dest_dir.mkdir(exist_ok=True, parents=True)
 
     if not source_dir.exists():
@@ -33,3 +33,4 @@ def init_autograder(base_dest_path: str) -> None:
         )
 
     shutil.copytree(source_dir, dest_dir, dirs_exist_ok=True)
+    print(f'Initialized autograder in "{dest_dir}".')

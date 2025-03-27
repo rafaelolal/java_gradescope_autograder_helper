@@ -68,7 +68,7 @@ def compile_test_results(
     Compile test results for Gradescope autograders.
     """
 
-    max_score = kwargs.get("score", 1)
+    max_score = kwargs.get("max_score", 1)
     test_result = {
         "score": None,
         "max_score": max_score,
@@ -88,11 +88,15 @@ def compile_test_results(
         test_result["status"] = "passed" if passed else "fail"
         test_result["score"] = max_score if passed else 0
     else:
-        score, feedback = validate_custom_diff_func_output(
-            diff_func, diff_func(reference_output, student_output)
+        score_percentage, feedback = validate_custom_diff_func_output(
+            diff_func, diff_func(student_output, reference_output)
         )
-        test_result["status"] = "passed"
-        test_result["score"] = score * max_score
+        if score_percentage == 1:
+            custom_status = "passed"
+        else:
+            custom_status = "failed"
+        test_result["status"] = custom_status
+        test_result["score"] = score_percentage * max_score
         test_result["output"] += f"\n\n{feedback}"
 
     return test_result
@@ -138,9 +142,9 @@ def validate_custom_diff_func_output(
         )
 
     score, feedback = output
-    if not (0 <= score <= 1):
+    if not (0 <= score and score <= 1):
         raise ConfigurationError(
-            f"The diff function {func} must return a score between 0 and 1 inclusive."
+            f"The diff function {func} must return a score percentage between 0 and 1 inclusive."
         )
 
     if not isinstance(feedback, str):

@@ -162,3 +162,5 @@ def write_results(results: dict) -> None:
     results_dir.mkdir(parents=True, exist_ok=True)
     with open(results_dir / "results.json", "w") as results_file:
         json.dump(results, results_file)
+
+    print(f'Results written to "{results_dir / "results.json"}".')

@@ -8,3 +8,5 @@ __pycache__
 .history
 .DS_Store
 *.class
+TODO.md
+/my_test
