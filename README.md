@@ -22,10 +22,10 @@ More easily and quickly create and test Gradescope autograders for Java assignme
 2. Put reference solution with a `main(String[] args)` entry point and any other required files in `autograder/source/`.
 
 While Not Happy(with=results.json):
-  3. Edit `autograder/source/tests.py`.
-  4. Put an example student submission in `autograder/submission/`.
-  5. Test by navigating to `/autograder` and running `autograder run tests.py`.
-  6. Check results in `autograder/results/results.json`.
+	1. Edit `autograder/source/tests.py`.
+	2. Put an example student submission in `autograder/submission/`.
+	3. Test by navigating to `/autograder` and running `autograder run tests.py`.
+	4. Check results in `autograder/results/results.json`.
 
 7. Zip the contents inside `autograder/source/` by runinng `autograder zip` and upload to Gradescope.
 
