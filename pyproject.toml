@@ -4,7 +4,7 @@ version = "1.2.0"
 description = "A helper package for setting up Gradescope autograder tests for Java projects"
 readme = "README.md"
 license = { file = "LICENSE" }
-pyversion = ">=3.10.6"
+pyversions = ">=3.10.6"
 url="https://github.com/rafaelolal/java_gradescope_autograder_helper"
 requires-python = ">=3.10.6"
 
