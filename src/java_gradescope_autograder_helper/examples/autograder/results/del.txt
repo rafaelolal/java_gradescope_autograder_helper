@@ -1,2 +1,0 @@
-// Learn more about `results.json` here:
-// https://gradescope-autograders.readthedocs.io/en/latest/specs/#output-format

@@ -6,6 +6,7 @@
  */
 
 public class Main {
+
     public static void main(String[] args) {
         if (args.length == 0) {
             return;
@@ -28,11 +29,13 @@ public class Main {
             }
         }
 
-        System.out.println("Usage: java Main greet <name> OR java Main add <number> <number>");
+        System.out.println(
+            "Usage: `java Main greet <name>` OR `java Main add <number> <number>`"
+        );
     }
 
     public static String greet(String name) {
-        return "Hello, " + name + "!" + " Banana Split!";
+        return "Hello, " + name + "!"; // + " Banana Split!";
     }
 
     public static int add(int a, int b) {
