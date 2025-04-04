@@ -1,5 +1,6 @@
 import argparse
 import sys
+from traceback import print_exc
 
 from .helpers import ConfigurationError
 from .init_autograder import init_autograder
@@ -13,6 +14,7 @@ def main():
 
     Parses command-line arguments and executes the appropriate command.
     """
+
     parser, args = setup_arg_parser()
     try:
         if args.command == "init":
@@ -34,6 +36,15 @@ def main():
         print(str(e), file=sys.stderr)
         sys.exit(1)
 
+    except Exception:
+        print_exc()
+        print("\n\n\n\n\n")
+        print(
+            "An unexpected error occurred. Please report to the package maintainers with the above error message and any details to reproduce the error.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
 
 def setup_arg_parser():
     """
@@ -42,6 +53,7 @@ def setup_arg_parser():
     Returns:
         argparse.Namespace: The parsed command-line arguments.
     """
+
     parser = argparse.ArgumentParser(
         description="Java Gradescope Autograder Helper - Tools for creating, running, and packaging Java autograders for Gradescope"
     )
@@ -58,7 +70,7 @@ def setup_arg_parser():
         "run", help="Run the autograder on a submission"
     )
     run_parser.add_argument(
-        "path", help="Path to the autograder tests Python module to execute"
+        "path", help="Name of the autograder tests Python module to execute"
     )
 
     # Zip command
