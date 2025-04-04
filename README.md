@@ -33,10 +33,10 @@ More comprehensive documentation is available under the Examples section.
 
 ## Commands
 
-* `autograder` - Display the help menu.
-* `autograder init` - Initialize the Gradescope environment in current directory.
-* `autograder run <tests.py>` - Run the autograder locally.
-* `autograder zip` - Zip the contents inside `autograder/source/` when in base directory.
+* `autograder`: Display the help menu.
+* `autograder init`: Initialize the Gradescope environment in current directory.
+* `autograder run <tests.py>`: Run the autograder locally.
+* `autograder zip`: Zip the contents inside `autograder/source/` when in base directory.
 
 ## Features
 
