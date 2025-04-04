@@ -1,5 +1,5 @@
-import subprocess
 from pathlib import Path
+from subprocess import run
 
 from .helpers import ConfigurationError
 
@@ -23,9 +23,7 @@ def compile_java(entry_point_path: str, classpath: str | None) -> None:
     java_files = list(entry_point_dir.rglob("*.java"))
     cmd.extend([str(java_file) for java_file in java_files])
 
-    result = subprocess.run(
-        cmd, capture_output=True, text=True, cwd=entry_point_dir
-    )
+    result = run(cmd, capture_output=True, text=True, cwd=entry_point_dir)
 
     if result.returncode != 0:
         raise ConfigurationError(f"Compilation failed:\n{result.stderr}")

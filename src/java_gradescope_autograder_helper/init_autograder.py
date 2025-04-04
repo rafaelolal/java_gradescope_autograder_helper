@@ -16,15 +16,15 @@ def init_autograder() -> None:
         ConfigurationError: If the source autograder directory does not
             exist, or if the destination directory cannot be verified after
             creation.
-
     """
+
     source_dir = Path(__file__).parent / "examples" / "autograder"
     dest_dir = Path.cwd() / "autograder"
     dest_dir.mkdir(exist_ok=True, parents=True)
 
     if not source_dir.exists():
         raise ConfigurationError(
-            f'Could not find source directory "{source_dir}" when initializing the autograder.'
+            f'Could not find source directory "{source_dir}" when initializing the autograder. Please report this issue to the package maintainers.'
         )
 
     if not dest_dir.exists():

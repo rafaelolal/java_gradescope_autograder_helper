@@ -11,13 +11,13 @@ def zip_autograder() -> None:
     in the directory in which the script is executed from
 
     Raises:
-        ConfigurationError:
+        ConfigurationError: If the source directory does not exist.
     """
 
     source_dir: Path = Path.cwd() / "autograder" / "source"
     if not source_dir.exists():
         raise ConfigurationError(
-            f'Could not find source directory "{source_dir}" when zipping the autograder.'
+            f'Could not find source directory "{source_dir}" when zipping the autograder. You must be outside of the /autograder directory to zip it properly.'
         )
 
     zip_name = "gradescope_autograder.zip"

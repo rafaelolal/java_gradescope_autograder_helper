@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable, cast
 
 from .checkstyle.checkstyle import check_style
 from .compiler import compile_java
 from .helpers import (
-    ABSOLUTE_RESULTS_DIR,
-    ABSOLUTE_SOURCE_DIR,
-    ABSOLUTE_SUBMISSION_DIR,
+    RESULTS_DIR,
+    SOURCE_DIR,
+    SUBMISSION_DIR,
     ConfigurationError,
     find_absolute_path,
 )
@@ -15,35 +15,51 @@ from .loader import load_module
 from .test_runner import run_tests
 
 
-def run_autograder(autograder_path: str) -> None:
-    global ABSOLUTE_SOURCE_DIR
-    global ABSOLUTE_SUBMISSION_DIR
+def run_autograder(tests_file_name: str) -> None:
+    global SOURCE_DIR, SUBMISSION_DIR
 
-    ABSOLUTE_SOURCE_DIR = find_absolute_path(ABSOLUTE_SOURCE_DIR)
-    ABSOLUTE_SUBMISSION_DIR = find_absolute_path(ABSOLUTE_SUBMISSION_DIR)
     # Loading tests module
-    path = find_absolute_path(autograder_path, cwd=ABSOLUTE_SOURCE_DIR)
-    tests_module = load_module(path)
+    absolute_source_path = find_absolute_path(SOURCE_DIR)
+    absolute_tests_file_path = find_absolute_path(tests_file_name, cwd=absolute_source_path)
+    tests_module = load_module(absolute_tests_file_path)
 
-    tests = validate_tests_module(tests_module)
-    reference_file_name = validate_entry_point(tests_module)
+    entry_point_name = validate_entry_point(tests_module)
 
     # Compiling
-    reference_file_path = find_absolute_path(
-        reference_file_name,
-        ABSOLUTE_SOURCE_DIR,
+    reference_entry_point_path = find_absolute_path(
+        entry_point_name,
+        absolute_source_path,
     )
-    submission_file_path = find_absolute_path(
-        reference_file_name,
-        ABSOLUTE_SUBMISSION_DIR,
+    absolute_submission_dir = find_absolute_path(SUBMISSION_DIR)
+    submission_entry_point_path = find_absolute_path(
+        entry_point_name,
+        absolute_submission_dir,
     )
+
+    classpath = getattr(tests_module, "CLASSPATH", None)
+    compile_java(reference_entry_point_path, classpath)
+    compile_java(submission_entry_point_path, classpath)
 
     # Run tests
     # Specification: https://gradescope-autograders.readthedocs.io/en/latest/specs/
-    final_json = {
-        "execution_time": None,
+    final_json: dict[str, int | list[dict[str, Any]]] = {
+        "execution_time": 0,
         "tests": [],
     }
+
+    # Compile Java
+    classpath = getattr(tests_module, "CLASSPATH", None)
+    if classpath is not None:
+        classpath = find_absolute_path(classpath)
+
+    tests = validate_test_list(tests_module)
+    execution_time, test_results = run_tests(
+        tests,
+        reference_entry_point_path,
+        submission_entry_point_path,
+    )
+    final_json["execution_time"] = execution_time
+    final_json["tests"] = test_results
 
     # Check style
     # Documentation: https://checkstyle.sourceforge.io/cmdline.html
@@ -51,32 +67,18 @@ def run_autograder(autograder_path: str) -> None:
     if style_results:
         final_json["tests"].append(style_results)
 
-    # Compile Java
-    classpath = getattr(tests_module, "CLASSPATH", None)
-    if classpath is not None:
-        classpath = find_absolute_path(classpath)
-
-    compile_java(reference_file_path, classpath)
-    compile_java(submission_file_path, classpath)
-
-    final_json["execution_time"], final_json["tests"] = run_tests(
-        tests, reference_file_path, submission_file_path
-    )
-
     write_results(final_json)
 
 
-def validate_tests_module(
+def validate_test_list(
     tests_module: object,
 ) -> list[
-    list[
-        tuple[
-            str,
-            Callable[[str, str], tuple[float, str]],
-            dict[str, str | int],
-        ]
-        | tuple[str, dict[str, str | int]],
+    tuple[
+        str,
+        Callable[[str, str], tuple[float, str]],
+        dict[str, Any],
     ]
+    | tuple[str, dict[str, Any]],
 ]:
     """
     Validates the tests module by ensuring that it contains a properly
@@ -88,12 +90,22 @@ def validate_tests_module(
             structure.
     """
 
-    if not hasattr(tests_module, "TESTS"):
+    tests = getattr(tests_module, "TESTS", None)
+    if tests is None:
         raise ConfigurationError(
-            "TESTS variable not found in the tests module"
+            "TESTS variable not in the tests configuration file."
         )
 
-    tests = tests_module.TESTS
+    if not isinstance(tests, (list, tuple)):
+        raise ConfigurationError(
+            "TESTS variable must be a list or tuple of test configurations."
+        )
+
+    tests = cast(
+        list[Any],
+        tests,
+    )
+
     # Validate tests
     for test in tests:
         if not isinstance(test, (list, tuple)):
@@ -101,6 +113,10 @@ def validate_tests_module(
                 "Invalid test configuration, must be a list or tuple"
             )
 
+        test = cast(list[Any], test)
+        args = None
+        func = None
+        kwargs = None
         if len(test) == 3:
             args, func, kwargs = test
 
@@ -117,13 +133,10 @@ def validate_tests_module(
                 "Invalid test configuration, must be (args, [optional diff_function], gradescope_kwargs)"
             )
 
-    if not isinstance(tests, list):
-        raise ConfigurationError("TESTS variable must be a list")
-
     return tests
 
 
-def validate_entry_point(tests_module) -> str:
+def validate_entry_point(tests_module: object) -> str:
     """
     Validates the 'ENTRY_POINT' variable in the provided tests module.
 
@@ -133,12 +146,12 @@ def validate_entry_point(tests_module) -> str:
             file name).
     """
 
-    if not hasattr(tests_module, "ENTRY_POINT"):
+    reference_file_name = getattr(tests_module, "ENTRY_POINT", None)
+    if reference_file_name is None:
         raise ConfigurationError(
             "ENTRY_POINT variable not found in the tests module"
         )
 
-    reference_file_name = tests_module.ENTRY_POINT
     if not isinstance(reference_file_name, str):
         raise ConfigurationError("ENTRY_POINT variable must be a string")
 
@@ -150,15 +163,15 @@ def validate_entry_point(tests_module) -> str:
     return reference_file_name
 
 
-def write_results(results: dict) -> None:
+def write_results(results: dict[str, Any]) -> None:
     """
     Write results to the results JSON file.
     """
 
-    global ABSOLUTE_RESULTS_DIR
+    global RESULTS_DIR
 
-    ABSOLUTE_RESULTS_DIR = find_absolute_path(ABSOLUTE_RESULTS_DIR)
-    results_dir = Path(ABSOLUTE_RESULTS_DIR)
+    absolute_results_path = find_absolute_path(RESULTS_DIR)
+    results_dir = Path(absolute_results_path)
     results_dir.mkdir(parents=True, exist_ok=True)
     with open(results_dir / "results.json", "w") as results_file:
         json.dump(results, results_file)

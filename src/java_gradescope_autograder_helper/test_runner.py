@@ -1,31 +1,33 @@
 import shlex
-import subprocess
 from pathlib import Path
-from typing import Any, Callable
+from subprocess import run
+from typing import Any, Callable, cast
 
 from .helpers import ConfigurationError
 
 
 def run_tests(
     tests: list[
-        tuple[
+        tuple[str, dict[str, Any]]
+        | tuple[
             str,
             Callable[[str, str], tuple[float, str]],
-            dict[str, str | int],
-        ]
-        | tuple[str, dict[str, str | int]],
+            dict[str, Any],
+        ],
     ],
     reference_file_path: str,
     submission_file_path: str,
 ) -> tuple[int, list[dict[str, Any]]]:
     """
-    Run tests on the student's Java submission using the reference implementation.
+    Run tests on the student's Java submission using the reference solution
+    implementation.
 
     Raises:
-        ConfigurationError: If the reference solution fails to run for any test.
+        ConfigurationError: If the reference solution fails to run for any
+        test or the test configuration setup is invalid
     """
 
-    results = []
+    results: list[dict[str, Any]] = []
     total_run_time = 0
     for i, test in enumerate(tests):
         if len(test) == 3:
@@ -34,7 +36,9 @@ def run_tests(
             args, kwargs = test
             diff_func = None
         else:
-            raise ConfigurationError("Invalid test configuration.")
+            raise ConfigurationError(
+                "Each test must be a tuple of 2 or 3 elements: (args, kwargs) or (args, diff_func, kwargs)."
+            )
 
         reference_output, reference_error = run_java_code(
             reference_file_path, args
@@ -61,14 +65,14 @@ def compile_test_results(
     reference_output: str,
     student_output: str,
     student_error: str,
-    diff_func: tuple[float, str] | None,
-    kwargs: dict[str, str | int],
-) -> dict[str, str | int | None]:
+    diff_func: Callable[[str, str], tuple[float, str]] | None,
+    kwargs: dict[str, Any],
+) -> dict[str, Any]:
     """
     Compile test results for Gradescope autograders.
     """
 
-    max_score = kwargs.get("max_score", 1)
+    max_score = kwargs.get("max_score", 0)
     test_result = {
         "score": None,
         "max_score": max_score,
@@ -78,8 +82,17 @@ def compile_test_results(
         "visibility": kwargs.get("visibility", "visible"),
     }
 
+    truncate_length = 140
+    truncate_message = f"(... {truncate_length} chars)"
+    test_result["output"] = cast(str, test_result["output"])
     if student_output:
-        test_result["output"] += f"\n\nOutput:\n\n{student_output}"
+        formatted_output = f"\n\nOutput:\n\n{student_output}"
+        if len(formatted_output) > truncate_length - len(truncate_message):
+            formatted_output = (
+                formatted_output[:truncate_length] + truncate_message
+            )
+        test_result["output"] += formatted_output
+
     if student_error:
         test_result["output"] += f"\n\nError:\n\n{student_error}"
 
@@ -87,6 +100,7 @@ def compile_test_results(
         passed = reference_output == student_output
         test_result["status"] = "passed" if passed else "fail"
         test_result["score"] = max_score if passed else 0
+
     else:
         score_percentage, feedback = validate_custom_diff_func_output(
             diff_func, diff_func(student_output, reference_output)
@@ -95,9 +109,11 @@ def compile_test_results(
             custom_status = "passed"
         else:
             custom_status = "failed"
+
         test_result["status"] = custom_status
         test_result["score"] = score_percentage * max_score
-        test_result["output"] += f"\n\n{feedback}"
+        if feedback:
+            test_result["output"] += f"\n\n{feedback}"
 
     return test_result
 
@@ -112,7 +128,7 @@ def run_java_code(path: str, command_line_args: str) -> tuple[str, str]:
     file_name = file_path.stem
     cmd = ["java", file_name] + shlex.split(command_line_args.strip())
 
-    result = subprocess.run(cmd, capture_output=True, cwd=cwd)
+    result = run(cmd, capture_output=True, cwd=cwd)
     # Decode outputs to get string results.
     stdout = result.stdout.decode("utf-8")
     stderr = result.stderr.decode("utf-8")
@@ -120,7 +136,7 @@ def run_java_code(path: str, command_line_args: str) -> tuple[str, str]:
 
 
 def validate_custom_diff_func_output(
-    func: Callable[[str, str], tuple[float, str]], output: str
+    func: Callable[[str, str], tuple[float, str]], output: Any
 ) -> tuple[float, str]:
     """
     Validate the output of a custom diff function.
@@ -136,6 +152,7 @@ def validate_custom_diff_func_output(
             f"The diff function {func} must return a tuple or list."
         )
 
+    output = cast(list[Any], output)
     if len(output) != 2:
         raise ConfigurationError(
             f"The diff function {func} must return exactly 2 elements."

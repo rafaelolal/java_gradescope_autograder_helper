@@ -1,6 +1,11 @@
 import os
 from pathlib import Path
 
+# Gradescope autograder file structure: https://gradescope-autograders.readthedocs.io/en/latest/specs/#file-hierarchy
+SOURCE_DIR = "/autograder/source"
+SUBMISSION_DIR = "/autograder/submission"
+RESULTS_DIR = "/autograder/results"
+
 
 class ConfigurationError(Exception):
     """
@@ -10,7 +15,7 @@ class ConfigurationError(Exception):
     pass
 
 
-def find_absolute_path(search, cwd=None):
+def find_absolute_path(search: str, cwd: str | None = None) -> str:
     """
     Searches for an absolute path ending with the specified string within a
     directory tree.
@@ -22,9 +27,9 @@ def find_absolute_path(search, cwd=None):
     """
 
     if cwd is None:
-        cwd = Path.cwd()
+        cwd = str(Path.cwd())
 
-    instances = []
+    instances: list[str] = []
     for root, dirs, files in os.walk(cwd):
         for thing in dirs + files:
             absolute_thing_path = os.path.join(root, thing)
@@ -36,15 +41,9 @@ def find_absolute_path(search, cwd=None):
 
     if len(instances) > 1:
         raise ConfigurationError(
-            f'Tried finding only one instance of the required file "{search}" in "{cwd}" but found multiple.'
+            f'Tried finding only one instance of the required file "{search}" in "{cwd}" but found {len(instances)}.'
         )
 
     raise ConfigurationError(
         f'Tried finding the required file "{search}" in "{cwd}" but it was not there.'
     )
-
-
-# Gradescope autograder file structure: https://gradescope-autograders.readthedocs.io/en/latest/specs/#file-hierarchy
-ABSOLUTE_SOURCE_DIR = "/autograder/source"
-ABSOLUTE_SUBMISSION_DIR = "/autograder/submission"
-ABSOLUTE_RESULTS_DIR = "/autograder/results"
