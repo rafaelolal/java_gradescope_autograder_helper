@@ -20,7 +20,9 @@ def run_autograder(tests_file_name: str) -> None:
 
     # Loading tests module
     absolute_source_path = find_absolute_path(SOURCE_DIR)
-    absolute_tests_file_path = find_absolute_path(tests_file_name, cwd=absolute_source_path)
+    absolute_tests_file_path = find_absolute_path(
+        tests_file_name, cwd=absolute_source_path
+    )
     tests_module = load_module(absolute_tests_file_path)
 
     entry_point_name = validate_entry_point(tests_module)
@@ -42,7 +44,7 @@ def run_autograder(tests_file_name: str) -> None:
 
     # Run tests
     # Specification: https://gradescope-autograders.readthedocs.io/en/latest/specs/
-    final_json: dict[str, int | list[dict[str, Any]]] = {
+    final_json: dict[str, float | list[dict[str, Any]]] = {
         "execution_time": 0,
         "tests": [],
     }

@@ -22,7 +22,7 @@ from typing import Any, Callable
 # The purpose of diff functions is to provide a more complex comparison
 # between the student output and the reference output beyond simple string
 # comparison.
-# All diff functions must have the below signature:
+# All diff functions must have the signature of the below example:
 def check_for_secret(
     student_out: str, reference_out: str
 ) -> tuple[float, str]:
@@ -38,7 +38,7 @@ def check_for_secret(
     return score_percentage, feedback
 
 
-CLASSPATH: str = ""
+CLASSPATH: str | None = None
 # ENTRY_POINT should not be a path, but just the name of the file containing
 # the main method.
 ENTRY_POINT: str = "Main.java"
@@ -70,6 +70,8 @@ CHECK_STYLE: dict[str, Any] = {
 # The only keys you will probably ever need are: "max_score", "name", "number",
 # "visiblity".
 # Keep in mind that the scores must match whatever you set in Gradescope.
+# Additional package-only kwargs:
+# "timeout": int,  # Optional timeout in whole seconds for the test case.
 TESTS: list[
     tuple[str, dict[str, Any]]
     | tuple[str, Callable[[str, str], tuple[float, str]], dict[str, Any]]
@@ -79,7 +81,10 @@ TESTS: list[
         check_for_secret,
         {"max_score": 10, "name": "Check Secret"},
     ),
-    ("add 1 2", {"max_score": 10, "name": "Evaluate 1+2"}),
-    ("add 3 4", {"max_score": 10, "name": "Evaluate 3+4"}),
+    ("add 1 2", {"max_score": 10, "name": "Evaluate 1+2", "timeout": 2}),
+    (
+        "add 3 4",
+        {"max_score": 10, "name": "Evaluate 3+4", "visibility": "hidden"},
+    ),
     ("add 5 6", {"max_score": 10, "name": "Evaluate 5+6"}),
 ]

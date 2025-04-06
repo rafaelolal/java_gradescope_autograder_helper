@@ -1,5 +1,9 @@
 import os
+import signal
+from math import ceil
 from pathlib import Path
+from time import time
+from typing import Any, Callable
 
 # Gradescope autograder file structure: https://gradescope-autograders.readthedocs.io/en/latest/specs/#file-hierarchy
 SOURCE_DIR = "/autograder/source"
@@ -47,3 +51,48 @@ def find_absolute_path(search: str, cwd: str | None = None) -> str:
     raise ConfigurationError(
         f'Tried finding the required file "{search}" in "{cwd}" but it was not there.'
     )
+
+
+def timed_execution(
+    func: Callable[..., Any],
+) -> Callable[..., tuple[Any, float]]:
+    def wrapper(*args: Any, **kwargs: Any) -> tuple[Any, float]:
+        start = time()
+        result = func(*args, **kwargs)
+        end = time()
+        execution_time = end - start
+        return result, execution_time
+
+    return wrapper
+
+
+def time_limited_execution(seconds: int | None = None):
+    def handler(signum: int, frame: Any):
+        raise TimeoutError()
+
+    def decorator(func: Callable[..., Any]):
+        def wrapper(
+            *args: Any, **kwargs: Any
+        ) -> tuple[Any, float] | TimeoutError:
+            if seconds is None:
+                return func(*args, **kwargs)
+
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(ceil(seconds))
+
+            try:
+                result = func(*args, **kwargs)
+
+            except TimeoutError:
+                return TimeoutError(
+                    f"Time limit of {seconds} second(s) exceeded."
+                )
+
+            finally:
+                signal.alarm(0)
+
+            return result
+
+        return wrapper
+
+    return decorator

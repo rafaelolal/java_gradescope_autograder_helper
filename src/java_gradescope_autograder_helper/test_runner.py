@@ -3,7 +3,11 @@ from pathlib import Path
 from subprocess import run
 from typing import Any, Callable, cast
 
-from .helpers import ConfigurationError
+from .helpers import (
+    ConfigurationError,
+    time_limited_execution,
+    timed_execution,
+)
 
 
 def run_tests(
@@ -17,7 +21,7 @@ def run_tests(
     ],
     reference_file_path: str,
     submission_file_path: str,
-) -> tuple[int, list[dict[str, Any]]]:
+) -> tuple[float, list[dict[str, Any]]]:
     """
     Run tests on the student's Java submission using the reference solution
     implementation.
@@ -30,28 +34,32 @@ def run_tests(
     results: list[dict[str, Any]] = []
     total_run_time = 0
     for i, test in enumerate(tests):
+        args = None
+        diff_func = None
+        kwargs: dict[str, Any] = {}
         if len(test) == 3:
             args, diff_func, kwargs = test
+
         elif len(test) == 2:
             args, kwargs = test
             diff_func = None
-        else:
-            raise ConfigurationError(
-                "Each test must be a tuple of 2 or 3 elements: (args, kwargs) or (args, diff_func, kwargs)."
-            )
 
-        reference_output, reference_error = run_java_code(
+        assert args is not None
+
+        reference_output, reference_error, _ = run_java_code(
             reference_file_path, args
         )
         if reference_error:
-            test_name = kwargs.get("name", "<unknown>")
+            test_name = kwargs.get("name", "<no name>")
             raise ConfigurationError(
-                f"The reference solution code failed to run on test {i}: {test_name}."
+                f'The reference solution code failed to run on test ({i}) "{test_name}" with error:\n\n{reference_error}'
             )
 
-        student_output, student_error = run_java_code(
-            submission_file_path, args
+        timeout = kwargs.get("timeout", None)
+        student_output, student_error, execution_time = run_java_code(
+            submission_file_path, args, timeout=timeout
         )
+        total_run_time += execution_time
 
         result = compile_test_results(
             reference_output, student_output, student_error, diff_func, kwargs
@@ -97,9 +105,15 @@ def compile_test_results(
         test_result["output"] += f"\n\nError:\n\n{student_error}"
 
     if diff_func is None:
-        passed = reference_output == student_output
-        test_result["status"] = "passed" if passed else "fail"
-        test_result["score"] = max_score if passed else 0
+        score_percentage, feedback = default_diff_function(
+            student_output, reference_output
+        )
+        if score_percentage == 1:
+            test_result["status"] = "passed"
+        else:
+            test_result["status"] = "failed"
+
+        test_result["score"] = score_percentage * max_score
 
     else:
         score_percentage, feedback = validate_custom_diff_func_output(
@@ -118,7 +132,9 @@ def compile_test_results(
     return test_result
 
 
-def run_java_code(path: str, command_line_args: str) -> tuple[str, str]:
+def run_java_code(
+    path: str, command_line_args: str, timeout: int | None = None
+) -> tuple[str, str, float]:
     """
     Run a Java program given a compiled class file path and a command line arguments string.
     """
@@ -128,11 +144,15 @@ def run_java_code(path: str, command_line_args: str) -> tuple[str, str]:
     file_name = file_path.stem
     cmd = ["java", file_name] + shlex.split(command_line_args.strip())
 
-    result = run(cmd, capture_output=True, cwd=cwd)
+    timed_run = timed_execution(time_limited_execution(timeout)(run))
+    result, execution_time = timed_run(cmd, capture_output=True, cwd=cwd)
+    if isinstance(result, TimeoutError):
+        return "", str(result), execution_time
+
     # Decode outputs to get string results.
     stdout = result.stdout.decode("utf-8")
     stderr = result.stderr.decode("utf-8")
-    return stdout, stderr
+    return stdout, stderr, execution_time
 
 
 def validate_custom_diff_func_output(
@@ -170,3 +190,12 @@ def validate_custom_diff_func_output(
         )
 
     return score, feedback
+
+
+def default_diff_function(
+    student_output: str, reference_output: str
+) -> tuple[float, str]:
+    if student_output == reference_output:
+        return 1.0, "Outputs match exactly."
+    else:
+        return 0.0, "Outputs do not match."
