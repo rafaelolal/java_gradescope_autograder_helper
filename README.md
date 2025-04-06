@@ -46,11 +46,12 @@ The motivation for this package came after noticing the countless hours my profe
 * Independent of reference or student submission file structure, as long as it has the appropriate `main(String[] args)` entry point.
 * Easily test autograder locally.
 * Create custom functions for more versatility when testing student output.
-* Test student syntax with Checkstyle by providing a custom config. You can edit or extend the default config by downloading it at: [GitHub/bowdoin_checks](https://github.com/rafaelolal/java_gradescope_autograder_helper/blob/main/src/java_gradescope_autograder_helper/checkstyle/bowdoin_checks.xml).
-* Create custom style evaluation functions.
+* Test student syntax with Checkstyle by providing a custom config. You can edit or extend the default config by downloading it at: [GitHub/bowdoin-checks](https://github.com/rafaelolal/bowdoin-checks).
 * Easily package to uplaod to Gradescope.
 * Comprehensive documentation and examples.
 * Easily extensible because it uses a `.py` file for the configuration.
+* Individually time out test cases instead of the global-only Gradescope timeout.
+* TODO: Create custom style evaluation functions.
 
 ## Examples
 
@@ -59,3 +60,7 @@ A comprehensive example is available on every execution of `autograder init`. Ad
 Here is a sample of what `autograder init` generates: [GitHub/examples](https://github.com/rafaelolal/java_gradescope_autograder_helper/tree/main/src/java_gradescope_autograder_helper/examples).
 
 The most important file is `autograder/source/tests.py`. This file contains all the configurations for the autograder and the test cases that will be run on the reference and student solutions.
+
+## Release Notes
+
+* 1.2.5: Added additional option to time out student submissions.
