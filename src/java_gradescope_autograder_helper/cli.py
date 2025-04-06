@@ -1,11 +1,17 @@
 import argparse
-import sys
+from os import environ
+from sys import exit, stderr
 from traceback import print_exc
+
+from dotenv import load_dotenv
 
 from .helpers import ConfigurationError
 from .init_autograder import init_autograder
 from .run_autograder import run_autograder
 from .zip_autograder import zip_autograder
+
+load_dotenv()
+DEBUG = bool(int(environ.get("DEBUG", "0")))  # 1 for True, 0 for False
 
 
 def main():
@@ -14,6 +20,9 @@ def main():
 
     Parses command-line arguments and executes the appropriate command.
     """
+
+    if DEBUG:
+        print("Debug mode is ON. Detailed error messages will be shown.")
 
     parser, args = setup_arg_parser()
     try:
@@ -30,20 +39,23 @@ def main():
             # No command provided, show help
             parser.print_help()
 
-        sys.exit(0)
+        exit(0)
 
     except ConfigurationError as e:
-        print(str(e), file=sys.stderr)
-        sys.exit(1)
+        if DEBUG:
+            print_exc()
+
+        print(str(e), file=stderr)
+        exit(1)
 
     except Exception:
         print_exc()
         print("\n\n\n\n\n")
         print(
             "An unexpected error occurred. Please report to the package maintainers with the above error message and any details to reproduce the error.",
-            file=sys.stderr,
+            file=stderr,
         )
-        sys.exit(1)
+        exit(1)
 
 
 def setup_arg_parser():

@@ -12,7 +12,9 @@ authors = [
     { name = "Rafael Almeida", email = "github@ralmeida.dev" }
 ]
 
-dependencies = []
+dependencies = [
+    "dotenv>=0.9.9",
+]
 
 [project.scripts]
 autograder = "java_gradescope_autograder_helper.cli:main"

@@ -10,3 +10,4 @@ __pycache__
 *.class
 TODO.md
 /my_test
+.env
