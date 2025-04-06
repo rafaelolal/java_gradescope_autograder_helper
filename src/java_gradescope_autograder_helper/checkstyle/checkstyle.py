@@ -1,7 +1,7 @@
 import importlib.resources
 import re
 from pathlib import Path
-from subprocess import CompletedProcess, run
+from subprocess import run
 from typing import Any, cast
 
 from ..helpers import (
@@ -28,11 +28,13 @@ def check_style(tests_module: object) -> dict[str, Any] | None:
     check_style_regex = check_style.get("file_regex", r".*\.java")
 
     absolute_submission_path = find_absolute_path(SUBMISSION_DIR)
-    files_to_check = get_files_to_check(absolute_submission_path, check_style_regex)
+    files_to_check = get_files_to_check(
+        absolute_submission_path, check_style_regex
+    )
 
     violations = 0
     for file in files_to_check:
-        stdout, stderr = run_checkstyle(
+        _, stderr = run_checkstyle(
             find_absolute_path(file, cwd=absolute_submission_path),
             checks_config_file,
         )
@@ -79,9 +81,7 @@ def run_checkstyle(java_file: str, config_path: str | None) -> tuple[str, str]:
         # Checkstyle stderr contains the number of errors found and I believe
         # the error code is also sometimes the number of errors found, so
         # I have to check if it was unsuccessful by doing this.
-        if (
-            "Audit done." not in stdout
-        ):
+        if "Audit done." not in stdout:
             raise ConfigurationError(
                 f"Checkstyle failed ({result.returncode}):\n{' '.join(cmd)}\n\nOutput:\n\n{result.stdout}\n\nError:\n\n{result.stderr}"
             )
