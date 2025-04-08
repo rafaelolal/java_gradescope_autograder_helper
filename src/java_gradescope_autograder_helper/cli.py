@@ -3,14 +3,12 @@ from os import environ
 from sys import exit, stderr
 from traceback import print_exc
 
-from dotenv import load_dotenv
-
-from .helpers import ConfigurationError
+from .helpers import ConfigurationError, load_env
 from .init_autograder import init_autograder
 from .run_autograder import run_autograder
 from .zip_autograder import zip_autograder
 
-load_dotenv()
+load_env()
 DEBUG = bool(int(environ.get("DEBUG", "0")))  # 1 for True, 0 for False
 
 

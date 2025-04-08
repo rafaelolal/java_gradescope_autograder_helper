@@ -77,15 +77,16 @@ def time_limited_execution(seconds: int | None = None):
             if seconds is None:
                 return func(*args, **kwargs)
 
+            int_seconds = ceil(seconds)
             signal.signal(signal.SIGALRM, handler)
-            signal.alarm(ceil(seconds))
+            signal.alarm(int_seconds)
 
             try:
                 result = func(*args, **kwargs)
 
             except TimeoutError:
                 return TimeoutError(
-                    f"Time limit of {seconds} second(s) exceeded."
+                    f"Time limit of {int_seconds} second(s) exceeded."
                 )
 
             finally:
@@ -96,3 +97,16 @@ def time_limited_execution(seconds: int | None = None):
         return wrapper
 
     return decorator
+
+
+def load_env():
+    current_file_dir = Path(__file__).parent.parent.parent.absolute()
+    env_file_path = current_file_dir / ".env"
+    if not env_file_path.exists():
+        return
+
+    with open(env_file_path, "r") as file:
+        for line in file:
+            if line.strip() and not line.startswith("#") and "=" in line:
+                key, value = line.strip().split("=", 1)
+                os.environ[key] = value

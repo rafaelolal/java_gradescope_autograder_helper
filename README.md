@@ -24,7 +24,8 @@ More easily and quickly create and test Gradescope autograders for Java assignme
 4. Put an example student submission in `autograder/submission/`.
 5. Test by navigating to `/autograder` and running `autograder run tests.py`.
 6. Check results in `autograder/results/results.json`.
-7. Zip the contents inside `autograder/source/` by runinng `autograder zip` and upload to Gradescope.
+7. Zip the contents inside `autograder/source/` by runinng `autograder zip`.
+8. Upload to Gradescope with "Base Image OS" `Ubuntu 22.04` with "Base Image Variant" `JDK 17`.
 
 
 The whole flow for working with this package rests on the structure Gradescope creates in the docker containers it spins up for each student submission. Having that structure locally allows you to quickly iterate without depending on uploading it to Gradescope. You can refer to the [Gradescope autograder file hierarchy documentation](https://gradescope-autograders.readthedocs.io/en/latest/specs/#file-hierarchy) for more information on how/why the autograder is structured this way.
@@ -63,4 +64,7 @@ The most important file is `autograder/source/tests.py`. This file contains all 
 
 ## Release Notes
 
+* 1.2.6:
+  * Removed `dotenv` dependency.
+  * Now catches configuration error if `javac` is not installed.
 * 1.2.5: Added additional option to time out student submissions.
