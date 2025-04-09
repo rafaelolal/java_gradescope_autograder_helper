@@ -1,6 +1,6 @@
 [project]
 name = "java-gradescope-autograder-helper"
-version = "1.2.6"
+version = "1.2.7"
 description = "A helper package for setting up Gradescope autograder tests for Java projects"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -10,10 +10,6 @@ requires-python = ">=3.10"
 
 authors = [
     { name = "Rafael Almeida", email = "github@ralmeida.dev" }
-]
-
-dependencies = [
-    "dotenv>=0.9.9",
 ]
 
 [project.scripts]

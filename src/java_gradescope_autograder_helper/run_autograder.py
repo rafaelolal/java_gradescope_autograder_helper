@@ -18,6 +18,13 @@ from .test_runner import run_tests
 def run_autograder(tests_file_name: str) -> None:
     global SOURCE_DIR, SUBMISSION_DIR
 
+    # Check if we're running in the "autograder" directory
+    current_path = Path.cwd()
+    if current_path.name != "autograder":
+        raise ConfigurationError(
+            f"The command `autograder run` must be executed inside the 'autograder' directory, not \"{current_path.name}\""
+        )
+
     # Loading tests module
     absolute_source_path = find_absolute_path(SOURCE_DIR)
     absolute_tests_file_path = find_absolute_path(

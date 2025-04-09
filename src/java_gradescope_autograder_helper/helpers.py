@@ -33,6 +33,10 @@ def find_absolute_path(search: str, cwd: str | None = None) -> str:
     if cwd is None:
         cwd = str(Path.cwd())
 
+    # Adding the forward slash to ensure we match the end of the path
+    if not search.startswith("/"):
+        search = "/" + search
+
     instances: list[str] = []
     for root, dirs, files in os.walk(cwd):
         for thing in dirs + files:
@@ -44,8 +48,9 @@ def find_absolute_path(search: str, cwd: str | None = None) -> str:
         return instances[0]
 
     if len(instances) > 1:
+        newline = "\n"
         raise ConfigurationError(
-            f'Tried finding only one instance of the required file "{search}" in "{cwd}" but found {len(instances)}.'
+            f'Tried finding only one instance of the required file "{search}" in "{cwd}" but found {len(instances)}:\n{newline.join(instances)}.'
         )
 
     raise ConfigurationError(

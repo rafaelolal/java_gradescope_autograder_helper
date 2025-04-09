@@ -20,16 +20,17 @@ def init_autograder() -> None:
 
     source_dir = Path(__file__).parent / "examples" / "autograder"
     dest_dir = Path.cwd() / "autograder"
-    dest_dir.mkdir(exist_ok=True, parents=True)
+
+    try:
+        dest_dir.mkdir(parents=True)
+    except FileExistsError:
+        raise ConfigurationError(
+            f'Autograder environment "{dest_dir}" already exists.'
+        )
 
     if not source_dir.exists():
         raise ConfigurationError(
             f'Could not find source directory "{source_dir}" when initializing the autograder. Please report this issue to the package maintainers.'
-        )
-
-    if not dest_dir.exists():
-        raise ConfigurationError(
-            f"Could not find the destination directory {dest_dir} when initializing the autograder."
         )
 
     shutil.copytree(source_dir, dest_dir, dirs_exist_ok=True)
