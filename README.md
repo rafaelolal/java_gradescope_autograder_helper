@@ -64,7 +64,7 @@ The most important file is `autograder/source/tests.py`. This file contains all 
 
 ## Release Notes
 
-* 1.2.6:
+* 1.2.7:
   * Improved file searching. Now displays all paths when multiple matches are found and uses exact matching with forward slashes to prevent partial matches (e.g., "my_file" will match "path/to/my_file" but not "path/to/hello_my_file").
   * When running `autograder init`, it will first check if an autograder environment already exists to remove the risk of overriding.
   * Added a warning when executing the `autograder run` command outside of the `autograder` directory.
