@@ -22,19 +22,21 @@ from typing import Any, Callable
 # The purpose of diff functions is to provide a more complex comparison
 # between the student output and the reference output beyond simple string
 # comparison.
+# Diff functions can also be used to provide feedback to the student, like
+# exposing completely to them what the expected output is.
 # All diff functions must have the signature of the below example:
 def check_for_secret(
     student_out: str, reference_out: str
 ) -> tuple[float, str]:
     score_percentage = 0.7
     feedback = "Did you include the secret phrase in your output?"
-    # student included the secret phrase
+    # Student included the secret phrase
     if "banana split" in student_out.lower():
         score_percentage = 1
         feedback = "Good Job!"
 
-    # score_percentage is a float between 0 and 1 that represents the
-    # percentage of the score the student should get.
+    # Score_percentage is a float between 0 and 1 that represents the
+    # ercentage of the score the student should get.
     return score_percentage, feedback
 
 
@@ -50,6 +52,10 @@ ENTRY_POINT: str = "Main.java"
 # which will usually be something like r"(File1|File2)\.java".
 # max_score: the maximum score for the style check.
 # eval_function: TODO
+# Required:
+# max_score
+# Default:
+# file_regex: r".*\.java"
 CHECK_STYLE: dict[str, Any] = {
     "config_file": None,
     "file_regex": r"Main\.java",
@@ -60,7 +66,7 @@ CHECK_STYLE: dict[str, Any] = {
 
 # TESTS is probably the most important part of this file. It is a list of tuples
 # with this structure:
-# (command_line_args, (optional)diff_function, gradescope_kwargs)
+# (command_line_args, [optional]diff_function, gradescope_kwargs)
 # command_line_args: a string that will be passed to the main method of the
 # reference and student code.
 # diff_function: a function that will be used to compare the student output to
@@ -72,6 +78,11 @@ CHECK_STYLE: dict[str, Any] = {
 # Keep in mind that the scores must match whatever you set in Gradescope.
 # Additional package-only kwargs:
 # "timeout": int,  # Optional timeout in whole seconds for the test case.
+# Required:
+# max_score
+# Default:
+# visibility: "visible"
+# timeout: 1 # seconds
 TESTS: list[
     tuple[str, dict[str, Any]]
     | tuple[str, Callable[[str, str], tuple[float, str]], dict[str, Any]]
