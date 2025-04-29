@@ -1,6 +1,6 @@
 import argparse
 from os import environ
-from sys import exit, stderr
+from sys import exit, stdout
 from traceback import print_exc
 
 from .helpers import ConfigurationError, load_env
@@ -34,7 +34,6 @@ def main():
             zip_autograder()
 
         else:
-            # No command provided, show help
             parser.print_help()
 
         exit(0)
@@ -43,16 +42,20 @@ def main():
         if DEBUG:
             print_exc()
 
-        print(str(e), file=stderr)
+        # Printing to stdout, that way Gradescope can capture it.
+        print(str(e))  # , file=stderr)
+
         exit(1)
 
     except Exception:
-        print_exc()
+        # Not sure what the default file is here
+        print_exc(file=stdout)
         print("\n\n\n\n\n")
         print(
             "An unexpected error occurred. Please report to the package maintainers with the above error message and any details to reproduce the error.",
-            file=stderr,
+            # file=stderr,
         )
+
         exit(1)
 
 
