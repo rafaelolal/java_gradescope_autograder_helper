@@ -41,7 +41,8 @@ def check_style(tests_module: object) -> dict[str, Any] | None:
         violations += get_total_errors(stderr)
 
     score_percentage, feedback = default_evaluation("", "", violations)
-    max_score = check_style.get("max_score", 0)
+    # Existence of "max_score" was validated already
+    max_score = check_style["max_score"]
 
     return {
         "name": "Style",
@@ -129,7 +130,7 @@ def validate_checkstyle_config(
     if not isinstance(config, dict):
         raise ConfigurationError('"CHECK_STYLE" must be a dictionary')
 
-    style_config: dict[str, Any] = config
+    style_config: dict[str, Any] = config  # type: ignore
     config_file = style_config.get("config_file", None)
     if config_file is not None and not isinstance(config_file, str):
         raise ConfigurationError('"CHECK_STYLE.config_file" must be a string')
@@ -139,13 +140,19 @@ def validate_checkstyle_config(
         raise ConfigurationError('"CHECK_STYLE.file_regex" must be a string')
 
     max_score = style_config.get("max_score", None)
-    if max_score is not None and not isinstance(max_score, int):
+    if max_score is None:
+        raise ConfigurationError('"CHECK_STYLE.max_score" is required')
+
+    if not isinstance(max_score, int):
         raise ConfigurationError('"CHECK_STYLE.max_score" must be an integer')
 
+    # TODO: implement eval function
+    # Use inspect module to check parameters and type annotations
     eval_function = style_config.get("eval_function", None)
-    if eval_function is not None and not callable(eval_function):
+    if eval_function is not None:  # and not callable(eval_function):
         raise ConfigurationError(
-            '"CHECK_STYLE.eval_function" must be a callable function'
+            '"CHECK_STYLE.eval_function" style evaluation function is not supported'
+            # '"CHECK_STYLE.eval_function" must be a callable function'
         )
 
     return style_config

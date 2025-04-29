@@ -16,8 +16,6 @@ from .test_runner import run_tests
 
 
 def run_autograder(tests_file_name: str) -> None:
-    global SOURCE_DIR, SUBMISSION_DIR
-
     # Check if we're running in the "autograder" directory
     current_path = Path.cwd()
     if current_path.name != "autograder":
@@ -45,21 +43,21 @@ def run_autograder(tests_file_name: str) -> None:
         absolute_submission_dir,
     )
 
-    classpath = getattr(tests_module, "CLASSPATH", None)
-    compile_java(reference_entry_point_path, classpath)
-    compile_java(submission_entry_point_path, classpath)
-
-    # Run tests
-    # Specification: https://gradescope-autograders.readthedocs.io/en/latest/specs/
-    final_json: dict[str, float | list[dict[str, Any]]] = {
-        "execution_time": 0,
-        "tests": [],
-    }
-
     # Compile Java
     classpath = getattr(tests_module, "CLASSPATH", None)
     if classpath is not None:
         classpath = find_absolute_path(classpath)
+
+    compile_java(reference_entry_point_path, classpath)
+    compile_java(submission_entry_point_path, classpath)
+
+    # Run tests
+    # Specification: https://gradescope-autograders.readthedocs.io/en/latest/specs/#output-format
+    final_json: dict[str, float | str | list[dict[str, Any]]] = {
+        "execution_time": 0,
+        "stdout_visibility": "visible",
+        "tests": [],
+    }
 
     tests = validate_test_list(tests_module)
     execution_time, test_results = run_tests(
@@ -116,10 +114,10 @@ def validate_test_list(
     )
 
     # Validate tests
-    for test in tests:
+    for i, test in enumerate(tests):
         if not isinstance(test, (list, tuple)):
             raise ConfigurationError(
-                "Invalid test configuration, must be a list or tuple"
+                f'Invalid test configuration for test "{i}", must be a list or tuple'
             )
 
         test = cast(list[Any], test)
@@ -139,7 +137,12 @@ def validate_test_list(
             and (func is None or callable(func))
         ):
             raise ConfigurationError(
-                "Invalid test configuration, must be (args, [optional diff_function], gradescope_kwargs)"
+                f'Invalid test configuration for test "{i}", must be (args, [optional diff_function], gradescope_kwargs)'
+            )
+
+        if "max_score" not in kwargs:
+            raise ConfigurationError(
+                f'Invalid test configuration for test "{i}", max_score is required'
             )
 
     return tests
@@ -176,8 +179,6 @@ def write_results(results: dict[str, Any]) -> None:
     """
     Write results to the results JSON file.
     """
-
-    global RESULTS_DIR
 
     absolute_results_path = find_absolute_path(RESULTS_DIR)
     results_dir = Path(absolute_results_path)

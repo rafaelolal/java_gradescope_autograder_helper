@@ -55,7 +55,7 @@ def run_tests(
                 f'The reference solution code failed to run on test ({i}) "{test_name}" with error:\n\n{reference_error}'
             )
 
-        timeout = kwargs.get("timeout", None)
+        timeout = kwargs.get("timeout", 1)
         student_output, student_error, execution_time = run_java_code(
             submission_file_path, args, timeout=timeout
         )
@@ -80,29 +80,56 @@ def compile_test_results(
     Compile test results for Gradescope autograders.
     """
 
-    max_score = kwargs.get("max_score", 0)
-    test_result = {
-        "score": None,
-        "max_score": max_score,
-        "status": None,
-        "name": kwargs.get("name"),
-        "output": kwargs.get("output", ""),
-        "visibility": kwargs.get("visibility", "visible"),
+    test_result = kwargs.copy()
+    test_result["score"] = 0
+    test_result["status"] = "failed"
+    test_result["output"] = ""
+    if "visibility" not in test_result:
+        test_result["visibility"] = "visible"
+
+    # The presence of max_score has already been validated
+    max_score = test_result["max_score"]
+
+    # Because students stdout and stderr is not in the "output" field to hide
+    # it from the students, adding them to the extra_data for purposes of the
+    # autograder creator to debug
+    test_result["extra_data"] = {
+        "reference_output": reference_output,
+        "student_output": student_output,
     }
 
-    truncate_length = 140
-    truncate_message = f"(... {truncate_length} chars)"
-    test_result["output"] = cast(str, test_result["output"])
+    # TODO: 04/29/2025 clean this up after KevinBacon project
+    # truncate_length = 140
+    # truncate_message = f"(... {truncate_length} chars)"
     if student_output:
-        formatted_output = f"\n\nOutput:\n\n{student_output}"
-        if len(formatted_output) > truncate_length - len(truncate_message):
-            formatted_output = (
-                formatted_output[:truncate_length] + truncate_message
-            )
+        # TODO: testing hiding student output and student stderr to stop them from cheating
+        # by throwing exceptions and showing that in their stdout
+        formatted_output = (
+            "Output:\n\nYour program output is hidden."  # {student_output}"
+        )
+        # if len(formatted_output) > truncate_length - len(truncate_message):
+        #     formatted_output = (
+        #         formatted_output[:truncate_length] + truncate_message
+        #     )
         test_result["output"] += formatted_output
 
     if student_error:
-        test_result["output"] += f"\n\nError:\n\n{student_error}"
+        # stderr is hidden from student to stop them from throwing exceptions that expose
+        # the test cases or other information.
+        # Take only first line and remove custom error messsage
+        first_line = student_error.splitlines()[0].split(": ")[0]
+        test_result["output"] += (
+            f"\n\nBasic Error Information:\n\n{first_line}"
+        )
+
+        test_result["extra_data"]["student_error"] = student_error
+
+        # Early return in case of error.
+        # TODO: However, an exception being thrown may be the expected
+        # behavior of the program, but since a configuration error is
+        # thrown when the reference solution fails, this package does
+        # not support exceptions as valid.
+        return test_result
 
     if diff_func is None:
         score_percentage, feedback = default_diff_function(
@@ -110,8 +137,6 @@ def compile_test_results(
         )
         if score_percentage == 1:
             test_result["status"] = "passed"
-        else:
-            test_result["status"] = "failed"
 
         test_result["score"] = score_percentage * max_score
 
@@ -120,14 +145,11 @@ def compile_test_results(
             diff_func, diff_func(student_output, reference_output)
         )
         if score_percentage == 1:
-            custom_status = "passed"
-        else:
-            custom_status = "failed"
+            test_result["status"] = "passed"
 
-        test_result["status"] = custom_status
         test_result["score"] = score_percentage * max_score
         if feedback:
-            test_result["output"] += f"\n\n{feedback}"
+            test_result["output"] += f"\n\nFeedback:\n\n{feedback}"
 
     return test_result
 
