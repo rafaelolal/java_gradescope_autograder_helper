@@ -27,7 +27,9 @@ def compile_java(entry_point_path: str, classpath: str | None) -> None:
         result = run(cmd, capture_output=True, text=True, cwd=entry_point_dir)
 
         if result.returncode != 0:
-            raise ConfigurationError(f"Compilation failed:\n{result.stderr}")
+            raise ConfigurationError(
+                f"Compilation failed (common cause is different JDK versions. Gradescope uses JDK 17):\n\n{result.stderr}"
+            )
 
     except FileNotFoundError as e:
         if "javac" in str(e):
