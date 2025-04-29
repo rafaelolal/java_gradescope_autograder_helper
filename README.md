@@ -64,6 +64,16 @@ The most important file is `autograder/source/tests.py`. This file contains all 
 
 ## Release Notes
 
+* 1.2.9:
+  * Hide student stderr and most of student stdout to not allow students to expose sensitive autograder information.
+  * Writing student stderr and stdout and reference stdout to an "extra_data" field that is not shown on Gradescope.
+  * Add to compilation error message that it was likely caused due to different JDK versions. As of now, Gradescope uses JDK 17.
+  * Set a default timeout of 1 second.
+  * Stopped using default of 0 for "max_score" and instead made it required.
+  * Create the "results" folder in case it does not exist when writing "results.json".
+  * Print package stdout and stderr to stdout so that Gradescope can capture it.
+* 1.2.8:
+  * Made autograder stdout visible to students.
 * 1.2.7:
   * Improved file searching. Now displays all paths when multiple matches are found and uses exact matching with forward slashes to prevent partial matches (e.g., "my_file" will match "path/to/my_file" but not "path/to/hello_my_file").
   * When running `autograder init`, it will first check if an autograder environment already exists to remove the risk of overriding.
