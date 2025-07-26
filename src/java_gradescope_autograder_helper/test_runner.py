@@ -93,36 +93,36 @@ def compile_test_results(
     # Because students stdout and stderr is not in the "output" field to hide
     # it from the students, adding them to the extra_data for purposes of the
     # autograder creator to debug
-    test_result["extra_data"] = {
-        "reference_output": reference_output,
-        "student_output": student_output,
-    }
+    # test_result["extra_data"] = {
+    # "reference_output": reference_output,
+    # "student_output": student_output,
+    # }
 
     # TODO: 04/29/2025 clean this up after KevinBacon project
-    # truncate_length = 140
-    # truncate_message = f"(... {truncate_length} chars)"
+    truncate_length = 140
+    truncate_message = f"(... {truncate_length} chars)"
     if student_output:
         # TODO: testing hiding student output and student stderr to stop them from cheating
         # by throwing exceptions and showing that in their stdout
         formatted_output = (
-            "Output:\n\nYour program output is hidden."  # {student_output}"
+            f"Output:\n\n{student_output}"  # Your program output is hidden."
         )
-        # if len(formatted_output) > truncate_length - len(truncate_message):
-        #     formatted_output = (
-        #         formatted_output[:truncate_length] + truncate_message
-        #     )
+        if len(formatted_output) > truncate_length - len(truncate_message):
+            formatted_output = (
+                formatted_output[:truncate_length] + truncate_message
+            )
         test_result["output"] += formatted_output
 
     if student_error:
         # stderr is hidden from student to stop them from throwing exceptions that expose
         # the test cases or other information.
         # Take only first line and remove custom error messsage
-        first_line = student_error.splitlines()[0].split(": ")[0]
-        test_result["output"] += (
-            f"\n\nBasic Error Information:\n\n{first_line}"
-        )
-
-        test_result["extra_data"]["student_error"] = student_error
+        # first_line = student_error.splitlines()[0].split(": ")[0]
+        # test_result["output"] += (
+        #     f"\n\nBasic Error Information:\n\n{first_line}"
+        # )
+        test_result["output"] += f"\n\nError:\n\n{student_error}"
+        # test_result["extra_data"]["student_error"] = student_error
 
         # Early return in case of error.
         # TODO: However, an exception being thrown may be the expected
